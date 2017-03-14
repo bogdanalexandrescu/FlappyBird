@@ -33,7 +33,7 @@ function Bird() {
 		for (var i = 0; i < obstacles.length; i++) {
 			if ((this.x<=obstacles[i].x && obstacles[i].x - this.x <= this.diam/2)|| (this.x > obstacles[i].x && this.x-obstacles[i].x <= this.diam/2 + obstacles[i].w))
 				if (this.y <= obstacles[i].height1+this.diam/2|| this.y >= height - obstacles[i].height2-this.diam/2){
-					obstacles[i].color = color(200,0,0);
+					obstacles[i].color = color(200,0,100);
 					obstacles[i].display();
 					return true;
 				}
@@ -51,3 +51,5 @@ function Bird() {
 			}
 
 		}
+
+	
