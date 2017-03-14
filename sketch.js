@@ -50,7 +50,7 @@ function draw() {
 			ellipse(width/2,height/2,200,100);
 			fill(255);
 			text("Oops!",width/2-20,height/2-5)
-			text("Press ESC to restart",width/2-65,height/2+15);
+			text("Press ENTER to restart",width/2-75,height/2+15);
 			if(currentScore > maxScore)
 				maxScore = currentScore;
 		}
@@ -79,12 +79,9 @@ function mousePressed() {
 function keyPressed() {
 	if(keyCode == UP_ARROW)
 		bird.fly();
-	if(keyCode == ESCAPE){
-		reset();
-		loop();
-	}
 	if(keyCode == ENTER){
 		reset();
+		loop();
 		started = 1;
 	}
 }
