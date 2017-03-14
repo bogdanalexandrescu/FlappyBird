@@ -1,7 +1,6 @@
 function setup() {
 	createCanvas(400, 600);
 	bird = new Bird();
-	spawnInterval = setInterval(addCoinsAndObs,spawnTime);
 	textSize(15);
 }
 var bird;
@@ -38,7 +37,7 @@ function draw() {
 
 			if (coins[i].offScreen())
 				coins.splice(i, 1);
-			if(dist(bird.x,bird.y,coins[i].x,coins[i].y)<bird.diam/2-coins[i].diam/2){
+			if(dist(bird.x,bird.y,coins[i].x,coins[i].y)<=bird.diam/2){
 				currentScore += 100;
 				coins.splice(i, 1);
 			}
@@ -85,14 +84,11 @@ function keyPressed() {
 		loop();
 	}
 	if(keyCode == ENTER){
+		reset();
 		started = 1;
 	}
 }
 
-function mouseWheel(){
-	reset();
-	loop();
-}
 
 function reset(){
 	currentScore = 0;

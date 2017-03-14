@@ -1,7 +1,7 @@
 function Obstacles() {
 	this.x = width;
 	this.height1 = random(50, height / 2);
-	this.height2 = height-random(130,180)-this.height1;
+	this.height2 = height-random(100,150)-this.height1;
 	this.w = 20;
 	this.speed = 1;
 	this.color = color(255);
