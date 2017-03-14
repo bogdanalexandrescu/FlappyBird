@@ -36,13 +36,13 @@ function Bird() {
 				obstacles[i].display();
 				return true;
 			}
-
-			if(this.y == height-this.diam/2)
-				return true;
-
-			return false;
-
 		}
+		if(this.y == height-this.diam/2)
+			return true;
+
+		return false;
+
+		
 	}
 	this.scored = function(){
 		if(obstacles.length!=0)
