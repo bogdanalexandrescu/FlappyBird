@@ -4,15 +4,15 @@ function Bird() {
 	this.diam = 20;
 	this.gravity = 0.4;
 	this.velocity = 0;
-
+	this.color = color("#D13525");
 	this.display = function() {
-		fill(200, 0, 100);
+		fill(this.color);
 		noStroke();
 		ellipse(this.x, this.y, this.diam, this.diam);
 	}
 
 	this.fly = function() {
-		this.velocity = -8;
+		this.velocity = -7.5;
 	}
 
 	this.update = function() {
@@ -33,7 +33,7 @@ function Bird() {
 		
 		for (var i = 0; i < obstacles.length; i++) {
 			if(collideRectCircle(obstacles[i].x,0,obstacles[i].w, obstacles[i].height1,this.x,this.y,this.diam) || collideRectCircle(obstacles[i].x,height - obstacles[i].height2,obstacles[i].w, obstacles[i].height2,this.x,this.y,this.diam)){
-				obstacles[i].color = color(200,0,100);
+				obstacles[i].color = this.color;
 				obstacles[i].display();
 				return true;
 			}

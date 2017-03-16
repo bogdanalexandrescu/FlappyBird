@@ -1,28 +1,32 @@
 function setup() {
-	createCanvas(400, 600);
+	createCanvas(400, 500);
 	bird = new Bird();
 	textSize(15);
+	backgroundColor = color("#4C3F54");
+	popupColor = bird.color;
 }
 var bird;
 var obstacles = [];
 var coins = [];
-var spawnTime = 3000;
+var spawnTime = 1500;
 var spawnInterval;
 var maxScore=0;
 var currentScore=0;
 var started = 0;
-
+var backgroundColor;
+var popupColor;
 function draw() {
 	if(started == 0){
-		background(50);
-		fill(200,0,100);
+		background(backgroundColor);
+		fill(popupColor);
+		noStroke();
 		ellipse(width/2,height/2,200,100);
 		fill(255);
 		text("Press ENTER to start",width/2-70,height/2-5);
 		text("Play using UP ARROW",width/2-75,height/2+15);
 	}
 	else if(started == 1){
-		background(50);
+		background(backgroundColor);
 		for (var i = obstacles.length - 1; i >= 0; i--) {
 			obstacles[i].update();
 			obstacles[i].display();
@@ -47,6 +51,7 @@ function draw() {
 
 		if (bird.hit()) {
 			noLoop();
+			fill(popupColor);
 			ellipse(width/2,height/2,200,100);
 			fill(255);
 			text("Oops!",width/2-20,height/2-5)
@@ -68,7 +73,7 @@ function addCoinsAndObs(){
 
 }
 function showScore(){
-	fill(200,0,100);
+	fill(255);
 	text("Max Score:" + maxScore,width-120,20);
 	text("Score:" + currentScore,width-120,40);
 }

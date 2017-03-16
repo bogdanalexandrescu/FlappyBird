@@ -2,11 +2,11 @@ function Coin(y){
 	this.diam = 5;
 	this.x = width + 10;
 	this.y = y;
-	this.speed = 1;
-
+	this.speed = 2;
+	this.color = color("#F2C057")
 	this.display = function(){
 		noStroke();
-		fill(200,200,0);
+		fill(this.color);
 		ellipse(this.x,this.y,this.diam,this.diam);
 	}
 
