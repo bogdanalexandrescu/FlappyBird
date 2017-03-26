@@ -47,8 +47,10 @@ function Bird() {
 	}
 	this.scored = function(){
 		if(obstacles.length!=0)
-			if(this.x-this.diam/2-obstacles[0].w -obstacles[0].x == 1)
+			if(this.x-this.diam/2-obstacles[0].w -obstacles[0].x == 2){
+				console.log("da");
 				return true;
+			}
 		}
 
 	}
