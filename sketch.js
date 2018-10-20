@@ -1,88 +1,57 @@
 function setup() {
     createCanvas(1000, 500);
-    bird = new Bird();
-    textSize(15);
     backgroundColor = color("#4C3F54");
-    popupColor = bird.color;
+
+    for (var i = 0; i < 40; i++) {
+        birds.push(new Bird());
+	}
+	reset();
 }
-var bird;
+var birds = [];
+var dead = [];
 var obstacles = [];
-var coins = [];
 var spawnTime = 1500;
 var spawnInterval;
-var maxScore = 0;
-var currentScore = 0;
 var started = 0;
 var backgroundColor;
-var popupColor;
+var epochs = 1;
 function draw() {
-    if (started == 0) {
-        background(backgroundColor);
-        fill(popupColor);
-        noStroke();
-        ellipse(width / 2, height / 2, 200, 100);
-        fill(255);
-        text("Press ENTER to start", width / 2 - 70, height / 2 - 5);
-        text("Play using UP ARROW", width / 2 - 75, height / 2 + 15);
-    } else if (started == 1) {
-        background(backgroundColor);
+    background(backgroundColor);
+    // if (started == 0) {
+    //     noStroke();
+    //     ellipse(width / 2, height / 2, 200, 100);
+    // //     fill(255);
+    // } else if (started == 1) {
         for (var i = obstacles.length - 1; i >= 0; i--) {
             obstacles[i].update();
             obstacles[i].display();
 
             if (obstacles[i].offScreen()) obstacles.splice(i, 1);
         }
-
-        for (var i = coins.length - 1; i >= 0; i--) {
-            coins[i].update();
-            coins[i].display();
-
-            if (coins[i].offScreen()) coins.splice(i, 1);
-            if (dist(bird.x, bird.y, coins[i].x, coins[i].y) <= bird.diam / 2) {
-                currentScore += 100;
-                coins.splice(i, 1);
+        for (var i = 0; i < birds.length; i++) {
+            birds[i].update();
+            birds[i].display();
+            birds[i].calculate_fitness();
+            if (birds[i].decision(obstacles)) {
+                birds[i].fly();
             }
-        }
-        bird.update();
-        bird.display();
+            if (birds[i].hit(obstacles)) {
+				birds[i].fitness -= birds[i].distance_to_next_obstacle(height - birds[i].y - birds[i].diam / 2, obstacles);
+                dead.push(birds.splice(i, 1)[0]);
+                i = i - 1;
+            }
+		}
 
-        if (bird.hit()) {
-            noLoop();
-            fill(popupColor);
-            ellipse(width / 2, height / 2, 200, 100);
-            fill(255);
-            text("Oops!", width / 2 - 20, height / 2 - 5);
-            text("Press ENTER to restart", width / 2 - 75, height / 2 + 15);
-            if (currentScore > maxScore) maxScore = currentScore;
+        if (birds.length == 0) {
+            reset();
         }
 
-        if (bird.scored()) currentScore += 50;
-
-        showScore();
-    }
 }
-function addCoinsAndObs() {
+function addObs() {
     obstacles.push(new Obstacles());
-    coins.push(
-        new Coin(
-            (height -
-                obstacles[obstacles.length - 1].height2 +
-                obstacles[obstacles.length - 1].height1) /
-                2,
-        ),
-    );
-}
-function showScore() {
-    fill(255);
-    text("Max Score:" + maxScore, width - 120, 20);
-    text("Score:" + currentScore, width - 120, 40);
-}
-function mousePressed() {
-    bird.fly();
 }
 
 function keyPressed() {
-    if (keyCode == UP_ARROW) bird.fly();
     if (keyCode == ENTER) {
         reset();
         loop();
@@ -91,11 +60,40 @@ function keyPressed() {
 }
 
 function reset() {
-    currentScore = 0;
-    obstacles = [];
-    coins = [];
-    bird = new Bird();
-    clearInterval(spawnInterval);
-    spawnInterval = setInterval(addCoinsAndObs, spawnTime);
-    obstacles = [];
+	obstacles = [];
+	clearInterval(spawnInterval);
+    breed();
+    spawnInterval = setInterval(addObs, spawnTime);
+}
+
+function breed() {
+    if (dead.length > 0) {
+		let best = dead.sort((a, b) => b.fitness - a.fitness).slice(0, 10);
+		dead = [];
+
+		console.log(`Best fitness from epoch ${epochs} : ${best[0].fitness}`);
+
+		for (let i = 0; i < best.length; i++) {
+            best[i].reset();
+		}
+
+		epochs += 1;
+        birds = [].concat(best);
+
+        for (let i = 0; i < best.length; i++) {
+            let mutated_bird = new Bird();
+            mutated_bird.weights = best[i].mutate();
+            birds.push(mutated_bird);
+        }
+
+        for (var i = 1; i < best.length; i++) {
+            let cross_weights = best[0].crossOver(best[i].weights);
+			let cross_bird1 = new Bird();
+			let cross_bird2 = new Bird();
+			cross_bird1.weights = cross_weights[0];
+			cross_bird2.weights = cross_weights[1];
+			birds.push(cross_bird1);
+            birds.push(cross_bird2);
+        }
+    }
 }

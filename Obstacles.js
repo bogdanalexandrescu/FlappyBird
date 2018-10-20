@@ -19,6 +19,6 @@ Obstacles.prototype.update = function() {
 };
 
 Obstacles.prototype.offScreen = function() {
-    if (this.x < -(this.w + 2)) return true;
+    if (this.x < -(this.w + 5)) return true;
     else return false;
 };
