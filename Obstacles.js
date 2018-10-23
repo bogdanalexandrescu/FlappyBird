@@ -1,11 +1,11 @@
 function Obstacles() {
     this.x = width;
-    this.gate = random(100, 120);
+    this.gate = 150;
     this.height1 = random(50, height / 2);
     this.height2 = height - this.gate - this.height1;
     this.w = 20;
     this.speed = 2;
-    this.color = color("#486824");
+    this.color = color('#486824');
 }
 Obstacles.prototype.display = function() {
     fill(this.color);
