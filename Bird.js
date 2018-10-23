@@ -177,7 +177,7 @@ Bird.prototype.crossOver = function(bird) {
         .concat(bird.weights1.slice(slice_point));
     let cross_weights2_l1 = bird.weights1
         .slice(0, slice_point)
-        .concat(this.weights1.slice(-slice_point));
+        .concat(this.weights1.slice(slice_point));
 
     slice_point = Math.round(random(1, this.weights2.length - 1));
     let cross_weights1_l2 = this.weights2
