@@ -69,6 +69,7 @@ function breed() {
         dead = [];
 
         console.log(`Best fitness from epoch ${epochs} : ${best[0].fitness}`);
+        console.log(`Max bird from generation: ${best[0].generation}`);
 
         for (let i = 0; i < best.length; i++) {
             best[i].reset();
@@ -79,6 +80,7 @@ function breed() {
 
         for (let i = 0; i < best.length; i++) {
             let mutated_bird = best[i].mutate();
+            mutated_bird.generation = epochs
             birds.push(mutated_bird);
         }
 
@@ -86,6 +88,8 @@ function breed() {
             let cross_bird1;
             let cross_bird2;
             [cross_bird1, cross_bird2] = best[0].crossOver(best[i]);
+            cross_bird1.generation = epochs
+            cross_bird2.generation = epochs
             birds.push(cross_bird1);
             birds.push(cross_bird2);
         }

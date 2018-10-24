@@ -12,20 +12,18 @@ function Bird() {
     this.gravity = 0.5;
     this.velocity = 0;
     this.color = color('#D13525');
+    this.generation = 1
 
     this.weights1 = [
-        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
-        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
-        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
-        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
-        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
-        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
-        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
-        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
+        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
+        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
+        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
+        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
+        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
+        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
     ];
 
     this.weights2 = [
-        random(MIN_RANDOM, MAX_RANDOM),
         random(MIN_RANDOM, MAX_RANDOM),
         random(MIN_RANDOM, MAX_RANDOM),
         random(MIN_RANDOM, MAX_RANDOM),
@@ -115,9 +113,10 @@ Bird.prototype.decision = function(obstacles) {
         obstacles
     );
 
-    let input = [[distance_to_bottom, distance_to_gap]];
+    let input = [[distance_to_bottom, distance_to_gap, 1]];
 
     let l1_output = this.dot(this.weights1, input);
+    l1_output.push(1)
 
     for (var i = 0; i < l1_output.length; i++) {
         l1_output[i] = this.relu(l1_output[i][0]);
@@ -216,6 +215,7 @@ Bird.prototype.mutate = function() {
         mutated_rows.push(which);
 
         mutated_row = [
+            random(MIN_RANDOM, MAX_RANDOM),
             random(MIN_RANDOM, MAX_RANDOM),
             random(MIN_RANDOM, MAX_RANDOM),
         ];
