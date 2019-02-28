@@ -1,6 +1,7 @@
-const MIN_RANDOM = -Math.sqrt(6 / 2);
-const MAX_RANDOM = Math.sqrt(6 / 2);
-
+//const MIN_RANDOM = -Math.sqrt(6 / 2);
+//const MAX_RANDOM = Math.sqrt(6 / 2);
+const MIN_RANDOM = -1000;
+const MAX_RANDOM = 1000;
 Array.prototype.clone = function() {
     return this.slice(0);
 };
@@ -12,15 +13,39 @@ function Bird() {
     this.gravity = 0.5;
     this.velocity = 0;
     this.color = color('#D13525');
-    this.generation = 1
+    this.generation = 1;
 
     this.weights1 = [
-        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
-        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
-        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
-        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
-        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
-        [random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM), random(MIN_RANDOM, MAX_RANDOM)],
+        [
+            random(MIN_RANDOM, MAX_RANDOM),
+            random(MIN_RANDOM, MAX_RANDOM),
+            random(MIN_RANDOM, MAX_RANDOM),
+        ],
+        [
+            random(MIN_RANDOM, MAX_RANDOM),
+            random(MIN_RANDOM, MAX_RANDOM),
+            random(MIN_RANDOM, MAX_RANDOM),
+        ],
+        [
+            random(MIN_RANDOM, MAX_RANDOM),
+            random(MIN_RANDOM, MAX_RANDOM),
+            random(MIN_RANDOM, MAX_RANDOM),
+        ],
+        [
+            random(MIN_RANDOM, MAX_RANDOM),
+            random(MIN_RANDOM, MAX_RANDOM),
+            random(MIN_RANDOM, MAX_RANDOM),
+        ],
+        [
+            random(MIN_RANDOM, MAX_RANDOM),
+            random(MIN_RANDOM, MAX_RANDOM),
+            random(MIN_RANDOM, MAX_RANDOM),
+        ],
+        [
+            random(MIN_RANDOM, MAX_RANDOM),
+            random(MIN_RANDOM, MAX_RANDOM),
+            random(MIN_RANDOM, MAX_RANDOM),
+        ],
     ];
 
     this.weights2 = [
@@ -116,7 +141,7 @@ Bird.prototype.decision = function(obstacles) {
     let input = [[distance_to_bottom, distance_to_gap, 1]];
 
     let l1_output = this.dot(this.weights1, input);
-    l1_output.push(1)
+    l1_output.push(1);
 
     for (var i = 0; i < l1_output.length; i++) {
         l1_output[i] = this.relu(l1_output[i][0]);

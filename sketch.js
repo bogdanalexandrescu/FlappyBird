@@ -41,7 +41,7 @@ function draw() {
     }
 
     if (birds.length == 0) {
-        reset();
+        //reset();
     }
 }
 function addObs() {
@@ -80,7 +80,7 @@ function breed() {
 
         for (let i = 0; i < best.length; i++) {
             let mutated_bird = best[i].mutate();
-            mutated_bird.generation = epochs
+            mutated_bird.generation = epochs;
             birds.push(mutated_bird);
         }
 
@@ -88,8 +88,8 @@ function breed() {
             let cross_bird1;
             let cross_bird2;
             [cross_bird1, cross_bird2] = best[0].crossOver(best[i]);
-            cross_bird1.generation = epochs
-            cross_bird2.generation = epochs
+            cross_bird1.generation = epochs;
+            cross_bird2.generation = epochs;
             birds.push(cross_bird1);
             birds.push(cross_bird2);
         }
