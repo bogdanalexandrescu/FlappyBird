@@ -1,97 +1,99 @@
+const SPAWNTIME = 3000;
+const NRBIRDS = 6;
+let birds = [];
+let deadBirds = [];
+let pipes = [];
+let spawnInterval;
+let started = 0;
+let epochs = 1;
+
 function setup() {
     createCanvas(1000, 500);
-    backgroundColor = color('#4C3F54');
-
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < NRBIRDS; i++) {
         birds.push(new Bird());
     }
     reset();
 }
-var birds = [];
-var dead = [];
-var obstacles = [];
-var spawnTime = 2000;
-var spawnInterval;
-var started = 0;
-var backgroundColor;
-var epochs = 1;
-function draw() {
-    background(backgroundColor);
-    for (var i = obstacles.length - 1; i >= 0; i--) {
-        obstacles[i].update();
-        obstacles[i].display();
 
-        if (obstacles[i].offScreen()) obstacles.splice(i, 1);
-    }
-    for (var i = 0; i < birds.length; i++) {
-        birds[i].update();
-        birds[i].display();
-        birds[i].calculate_fitness();
-        if (birds[i].decision(obstacles)) {
-            birds[i].fly();
+function draw() {
+    background('#4C3F54');
+
+    for (let index = pipes.length - 1; index >= 0; index--) {
+        pipes[index].update();
+        pipes[index].display();
+
+        if (pipes[index].offScreen()) {
+            pipes.splice(index, 1);
         }
-        if (birds[i].hit(obstacles)) {
-            birds[i].fitness -= birds[i].distance_to_gate(
-                height - birds[i].y - birds[i].diam / 2,
-                obstacles
-            );
-            dead.push(birds.splice(i, 1)[0]);
-            i = i - 1;
+    }
+    for (let index = 0; index < birds.length; index++) {
+        birds[index].update();
+        birds[index].display();
+        birds[index].calculateFitness();
+        if (birds[index].decision(pipes)) {
+            birds[index].fly();
+        }
+        if (birds[index].hit(pipes)) {
+            deadBirds.push(birds.splice(index, 1)[0]);
+            index = index - 1;
         }
     }
 
     if (birds.length == 0) {
-        //reset();
-    }
-}
-function addObs() {
-    obstacles.push(new Obstacles());
-}
-
-function keyPressed() {
-    if (keyCode == ENTER) {
         reset();
-        loop();
-        started = 1;
     }
+}
+function addPipe() {
+    pipes.push(new Pipe());
 }
 
 function reset() {
-    obstacles = [];
+    pipes = [];
+    pipes.push(new Pipe());
     clearInterval(spawnInterval);
     breed();
-    spawnInterval = setInterval(addObs, spawnTime);
+    spawnInterval = setInterval(addPipe, SPAWNTIME);
 }
 
-function breed() {
-    if (dead.length > 0) {
-        let best = dead.sort((a, b) => b.fitness - a.fitness).slice(0, 5);
-        dead = [];
+function breed(nrBest = 3, crossOver = false) {
+    if (deadBirds.length > 0) {
+        let bestBirds = deadBirds
+            .sort((a, b) => b.fitness - a.fitness)
+            .slice(0, nrBest);
+        deadBirds = [];
 
-        console.log(`Best fitness from epoch ${epochs} : ${best[0].fitness}`);
-        console.log(`Max bird from generation: ${best[0].generation}`);
+        console.log(
+            `Best fitness from epoch ${epochs} : ${bestBirds[0].fitness}`
+        );
+        console.log(`Max bird from generation: ${bestBirds[0].generation}`);
 
-        for (let i = 0; i < best.length; i++) {
-            best[i].reset();
+        for (let i = 0; i < bestBirds.length; i++) {
+            bestBirds[i].resetBirdPosition();
         }
 
         epochs += 1;
-        birds = [].concat(best);
+        birds = bestBirds.slice();
 
-        for (let i = 0; i < best.length; i++) {
-            let mutated_bird = best[i].mutate();
-            mutated_bird.generation = epochs;
-            birds.push(mutated_bird);
+        for (bird of bestBirds) {
+            const mutatedBird1 = bird.mutate(0.5);
+            //const mutatedBird2 = best[i].mutate(0.5);
+            mutatedBird1.generation = epochs;
+            //mutatedBird2.generation = epochs;
+            birds.push(mutatedBird1);
+            //birds.push(mutatedBird2);
         }
-
-        for (var i = 1; i < best.length; i++) {
-            let cross_bird1;
-            let cross_bird2;
-            [cross_bird1, cross_bird2] = best[0].crossOver(best[i]);
-            cross_bird1.generation = epochs;
-            cross_bird2.generation = epochs;
-            birds.push(cross_bird1);
-            birds.push(cross_bird2);
+        if (crossOver) {
+            for (let index = 0; index < bestBirds.length - 1; index++) {
+                let crossBird1;
+                let crossBird2;
+                [crossBird1, crossBird2] = bestBirds[index].crossOver(
+                    bestBirds[index + 1]
+                );
+                crossBird1.generation = epochs;
+                crossBird2.generation = epochs;
+                birds.push(crossBird1);
+                birds.push(crossBird1);
+            }
         }
     }
 }

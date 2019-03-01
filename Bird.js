@@ -1,12 +1,11 @@
-//const MIN_RANDOM = -Math.sqrt(6 / 2);
-//const MAX_RANDOM = Math.sqrt(6 / 2);
-const MIN_RANDOM = -1000;
-const MAX_RANDOM = 1000;
+const MIN = -1000;
+const MAX = 1000;
+
 Array.prototype.clone = function() {
     return this.slice(0);
 };
 
-function Bird() {
+function Bird(arhitecture = [2, 6, 1]) {
     this.x = width / 5;
     this.y = height / 2;
     this.diam = 20;
@@ -14,54 +13,24 @@ function Bird() {
     this.velocity = 0;
     this.color = color('#D13525');
     this.generation = 1;
-
-    this.weights1 = [
-        [
-            random(MIN_RANDOM, MAX_RANDOM),
-            random(MIN_RANDOM, MAX_RANDOM),
-            random(MIN_RANDOM, MAX_RANDOM),
-        ],
-        [
-            random(MIN_RANDOM, MAX_RANDOM),
-            random(MIN_RANDOM, MAX_RANDOM),
-            random(MIN_RANDOM, MAX_RANDOM),
-        ],
-        [
-            random(MIN_RANDOM, MAX_RANDOM),
-            random(MIN_RANDOM, MAX_RANDOM),
-            random(MIN_RANDOM, MAX_RANDOM),
-        ],
-        [
-            random(MIN_RANDOM, MAX_RANDOM),
-            random(MIN_RANDOM, MAX_RANDOM),
-            random(MIN_RANDOM, MAX_RANDOM),
-        ],
-        [
-            random(MIN_RANDOM, MAX_RANDOM),
-            random(MIN_RANDOM, MAX_RANDOM),
-            random(MIN_RANDOM, MAX_RANDOM),
-        ],
-        [
-            random(MIN_RANDOM, MAX_RANDOM),
-            random(MIN_RANDOM, MAX_RANDOM),
-            random(MIN_RANDOM, MAX_RANDOM),
-        ],
-    ];
-
-    this.weights2 = [
-        random(MIN_RANDOM, MAX_RANDOM),
-        random(MIN_RANDOM, MAX_RANDOM),
-        random(MIN_RANDOM, MAX_RANDOM),
-        random(MIN_RANDOM, MAX_RANDOM),
-        random(MIN_RANDOM, MAX_RANDOM),
-        random(MIN_RANDOM, MAX_RANDOM),
-        random(MIN_RANDOM, MAX_RANDOM),
-    ];
-
+    this.arhitecture = arhitecture;
+    this.weights = this.initWeights();
     this.fitness = 0;
 }
 
-Bird.prototype.reset = function() {
+Bird.prototype.initWeights = function() {
+    const WEIGHTS = [];
+    const ARHITECTURE = this.arhitecture;
+    for (let index = 0; index < ARHITECTURE.length - 1; index++) {
+        let input = ARHITECTURE[index];
+        let output = ARHITECTURE[index + 1];
+        WEIGHTS.push(tf.randomUniform([input, output], MIN, MAX));
+    }
+
+    return WEIGHTS;
+};
+
+Bird.prototype.resetBirdPosition = function() {
     this.x = width / 5;
     this.y = height / 2;
     this.fitness = 0;
@@ -90,23 +59,23 @@ Bird.prototype.update = function() {
     }
 };
 
-Bird.prototype.hit = function(obstacles) {
-    for (var i = 0; i < obstacles.length; i++) {
+Bird.prototype.hit = function(pipes) {
+    for (pipe of pipes) {
         if (
             collideRectCircle(
-                obstacles[i].x,
+                pipe.x,
                 0,
-                obstacles[i].w,
-                obstacles[i].height1,
+                pipe.width,
+                pipe.upperHeight,
                 this.x,
                 this.y,
                 this.diam
             ) ||
             collideRectCircle(
-                obstacles[i].x,
-                height - obstacles[i].height2,
-                obstacles[i].w,
-                obstacles[i].height2,
+                pipe.x,
+                height - pipe.lowerHeight,
+                pipe.width,
+                pipe.lowerHeight,
                 this.x,
                 this.y,
                 this.diam
@@ -115,180 +84,130 @@ Bird.prototype.hit = function(obstacles) {
             return true;
         }
     }
-    if (this.y >= height - this.diam / 2) return true;
+    if (this.y >= height - this.diam / 2) {
+        return true;
+    }
 
-    if (this.y <= this.diam / 2) return true;
+    if (this.y <= this.diam / 2) {
+        return true;
+    }
 
     return false;
 };
 
 Bird.prototype.scored = function() {
-    if (obstacles.length != 0)
-        if (this.x - this.diam / 2 - obstacles[0].w - obstacles[0].x == 5) {
+    if (pipes.length != 0)
+        if (this.x - this.diam / 2 - pipes[0].width - pipes[0].x == 5) {
             return true;
         }
 };
 
-Bird.prototype.decision = function(obstacles) {
-    let distance_to_bottom = height - this.y - this.diam / 2;
-    let distance_to_gap;
-    let distance;
-    [distance, distance_to_gap] = this.distance_to_gap(
-        distance_to_bottom,
-        obstacles
+Bird.prototype.decision = function(pipes) {
+    const distanceToBottom = height - this.y - this.diam / 2;
+    let distanceToGate;
+    let distanceToPipe;
+    [distanceToPipe, distanceToGate] = this.distanceToGateAndPipe(
+        distanceToBottom,
+        pipes
     );
 
-    let input = [[distance_to_bottom, distance_to_gap, 1]];
+    let input = tf.tensor([distanceToBottom, distanceToGate]);
 
-    let l1_output = this.dot(this.weights1, input);
-    l1_output.push(1);
-
-    for (var i = 0; i < l1_output.length; i++) {
-        l1_output[i] = this.relu(l1_output[i][0]);
+    for (weights of this.weights) {
+        input = input.dot(weights);
+        input = tf.relu(input);
     }
 
-    let output = this.dot_array(this.weights2, l1_output);
-    output = this.sigmoid(output);
+    const output = tf.sigmoid(input);
 
-    return output > 0.5;
+    return output.dataSync()[0] > 0.5;
 };
 
-Bird.prototype.distance_to_gate = function(distance_to_bottom, obstacles) {
-    for (var i = 0; i < obstacles.length; i++) {
-        distance = obstacles[i].x - this.x - this.diam / 2;
-        if (distance > -5) {
-            distance_to_gate = Math.sqrt(
+Bird.prototype.distanceToGate = function(distanceToBottom, pipes) {
+    for (pipe of pipes) {
+        const distanceToPipe = pipe.x - this.x - this.diam / 2;
+        if (distanceToPipe > -5) {
+            distanceToGate = Math.sqrt(
                 distance ** 2 +
-                    (obstacles[i].height2 +
-                        obstacles[i].gate / 2 -
-                        distance_to_bottom) **
-                        2
+                    (pipe.lowerHeight + pipe.gate / 2 - distanceToBottom) ** 2
             );
-            return distance_to_gate;
+            return distanceToGate;
         }
     }
 
     return width - this.x - this.diam / 2;
 };
 
-Bird.prototype.distance_to_gap = function(distance_to_bottom, obstacles) {
-    for (var i = 0; i < obstacles.length; i++) {
-        distance = obstacles[i].x - this.x - this.diam / 2;
-        if (distance > -30) {
-            let distance_to_gap =
-                obstacles[i].height2 +
-                obstacles[i].gate / 2 -
-                distance_to_bottom;
-            return [distance, distance_to_gap];
+Bird.prototype.distanceToGateAndPipe = function(distanceToBottom, pipes) {
+    for (pipe of pipes) {
+        const distanceToPipe = pipe.x - this.x - this.diam / 2;
+        //Be sure that the bird passed the last pipes
+        if (distanceToPipe > -(pipe.width + this.diam)) {
+            const distanceToGate =
+                pipe.lowerHeight + pipe.gate / 2 - distanceToBottom;
+            return [distanceToPipe, distanceToGate];
         }
     }
 
     return [width - this.x - this.diam / 2, 100];
 };
 
-Bird.prototype.sigmoid = function(x) {
-    return 1 / (1 + Math.exp(-x));
-};
-
-Bird.prototype.relu = function(x) {
-    return x > 0 ? x : 0;
-};
-
 Bird.prototype.crossOver = function(bird) {
-    let slice_point = Math.round(random(1, this.weights1.length - 1));
-    let cross_weights1_l1 = this.weights1
-        .slice(0, slice_point)
-        .concat(bird.weights1.slice(slice_point));
-    let cross_weights2_l1 = bird.weights1
-        .slice(0, slice_point)
-        .concat(this.weights1.slice(slice_point));
+    const otherWeights = bird.weights;
+    const crossWeights1 = [];
+    const crossWeights2 = [];
+    for (index = 0; index < this.weights.length; index++) {
+        const weights1 = this.weights[index];
+        const weights2 = otherWeights[index];
+        const slicePoint = Math.round(random(1, weights1.shape[0] - 1));
 
-    slice_point = Math.round(random(1, this.weights2.length - 1));
-    let cross_weights1_l2 = this.weights2
-        .slice(0, slice_point)
-        .concat(bird.weights2.slice(slice_point));
-    let cross_weights2_l2 = bird.weights2
-        .slice(0, slice_point)
-        .concat(this.weights2.slice(slice_point));
+        const crossLayer1 = weights1
+            .slice(0, slicePoint)
+            .concat(weights2.slice(slicePoint));
+        const crossLayer2 = weights2
+            .slice(0, slicePoint)
+            .concat(weights1.slice(slicePoint));
 
-    cross_bird1 = new Bird();
-    cross_bird2 = new Bird();
-
-    cross_bird1.weights1 = cross_weights1_l1;
-    cross_bird1.weights2 = cross_weights1_l2;
-
-    cross_bird2.weights1 = cross_weights2_l1;
-    cross_bird2.weights2 = cross_weights2_l2;
-
-    return [cross_bird1, cross_bird2];
-};
-
-Bird.prototype.mutate = function() {
-    let mutate_bird = new Bird();
-    let w1 = this.weights1.clone();
-    let w2 = this.weights2.clone();
-    let no_changes_l1 = Math.round(random(1, this.weights1.length - 1));
-    let no_changes_l2 = Math.round(random(1, this.weights2.length - 1));
-
-    let mutated_rows = [];
-    for (var i = 0; i < no_changes_l1; i++) {
-        let which = Math.round(random(0, this.weights1.length - 1));
-
-        while (mutated_rows.includes(which)) {
-            which = Math.round(random(0, this.weights1.length - 1));
-        }
-        mutated_rows.push(which);
-
-        mutated_row = [
-            random(MIN_RANDOM, MAX_RANDOM),
-            random(MIN_RANDOM, MAX_RANDOM),
-            random(MIN_RANDOM, MAX_RANDOM),
-        ];
-        w1[which] = mutated_row;
+        crossWeights1.push(crossLayer1);
+        crossWeights2.push(crossLayer2);
     }
 
-    mutated_rows = [];
-    for (var i = 0; i < no_changes_l2; i++) {
-        let which = Math.round(random(0, this.weights2.length - 1));
+    const crossBird1 = new Bird();
+    const crossBird2 = new Bird();
 
-        while (mutated_rows.includes(which)) {
-            which = Math.round(random(0, this.weights2.length - 1));
-        }
-        mutated_rows.push(which);
+    crossBird1.weights = crossWeights1;
+    crossBird2.weights = crossWeights2;
 
-        mutated_row = random(MIN_RANDOM, MAX_RANDOM);
-        w2[which] = mutated_row;
-    }
-
-    mutate_bird.weights1 = w1;
-    mutate_bird.weights2 = w2;
-
-    return mutate_bird;
+    return [crossBird1, crossBird2];
 };
 
-Bird.prototype.calculate_fitness = function() {
+Bird.prototype.mutate = function(probability = 0.2) {
+    const mutatedBird = new Bird();
+    const mutatedWeights = [];
+
+    for (weights of this.weights) {
+        const shape = weights.shape;
+        const buffer = tf.buffer(
+            shape,
+            weights.dtype,
+            weights.dataSync().slice()
+        );
+        for (let i = 0; i < shape[0]; i++) {
+            for (let j = 0; j < shape[1]; j++) {
+                const change = Math.random();
+                if (change <= probability) {
+                    buffer.set(random(MIN, MAX), i, j);
+                }
+            }
+        }
+        mutatedWeights.push(buffer.toTensor());
+    }
+
+    mutatedBird.weights = mutatedWeights;
+
+    return mutatedBird;
+};
+
+Bird.prototype.calculateFitness = function() {
     this.fitness += 2;
-};
-
-Bird.prototype.dot = function(matrix1, matrix2) {
-    dot_matrix = [];
-    for (var i = 0; i < matrix1.length; i++) {
-        row = [];
-        for (var j = 0; j < matrix2.length; j++) {
-            row.push(this.dot_array(matrix1[i], matrix2[j]));
-        }
-
-        dot_matrix.push(row);
-    }
-
-    return dot_matrix;
-};
-
-Bird.prototype.dot_array = function(array1, array2) {
-    sum = 0;
-    for (var i = 0; i < array1.length; i++) {
-        sum += array1[i] * array2[i];
-    }
-
-    return sum;
 };
