@@ -1,10 +1,6 @@
 const MIN = -1000;
 const MAX = 1000;
 
-Array.prototype.clone = function() {
-    return this.slice(0);
-};
-
 function Bird(arhitecture = [2, 6, 1]) {
     this.x = width / 5;
     this.y = height / 2;
@@ -19,15 +15,14 @@ function Bird(arhitecture = [2, 6, 1]) {
 }
 
 Bird.prototype.initWeights = function() {
-    const WEIGHTS = [];
-    const ARHITECTURE = this.arhitecture;
-    for (let index = 0; index < ARHITECTURE.length - 1; index++) {
-        let input = ARHITECTURE[index];
-        let output = ARHITECTURE[index + 1];
-        WEIGHTS.push(tf.randomUniform([input, output], MIN, MAX));
+    let weights = [];
+    for (let index = 0; index < this.arhitecture.length - 1; index++) {
+        let input = this.arhitecture[index];
+        let output = this.arhitecture[index + 1];
+        weights.push(tf.randomUniform([input, output], MIN, MAX));
     }
 
-    return WEIGHTS;
+    return weights;
 };
 
 Bird.prototype.resetBirdPosition = function() {
@@ -51,7 +46,9 @@ Bird.prototype.update = function() {
     this.y += this.velocity;
     this.velocity += this.gravity;
 
-    if (this.y > height - this.diam / 2) this.y = height - this.diam / 2;
+    if (this.y > height - this.diam / 2) {
+        this.y = height - this.diam / 2;
+    }
 
     if (this.y < this.diam / 2) {
         this.y = this.diam / 2;
@@ -60,7 +57,7 @@ Bird.prototype.update = function() {
 };
 
 Bird.prototype.hit = function(pipes) {
-    for (pipe of pipes) {
+    for (let pipe of pipes) {
         if (
             collideRectCircle(
                 pipe.x,
@@ -102,50 +99,35 @@ Bird.prototype.scored = function() {
         }
 };
 
-Bird.prototype.decision = function(pipes) {
-    const distanceToBottom = height - this.y - this.diam / 2;
-    let distanceToGate;
+Bird.prototype.jumpDecision = function(pipes) {
+    let distanceToBottom = height - this.y - this.diam / 2;
+    let distanceToGap;
     let distanceToPipe;
-    [distanceToPipe, distanceToGate] = this.distanceToGateAndPipe(
+    [distanceToPipe, distanceToGap] = this.distanceToGapAndPipe(
         distanceToBottom,
         pipes
     );
 
-    let input = tf.tensor([distanceToBottom, distanceToGate]);
-
-    for (weights of this.weights) {
+    let input = tf.tensor([distanceToBottom, distanceToGap]);
+    //Feedforward step
+    for (let weights of this.weights) {
         input = input.dot(weights);
         input = tf.relu(input);
     }
 
-    const output = tf.sigmoid(input);
+    let output = tf.sigmoid(input);
 
     return output.dataSync()[0] > 0.5;
 };
 
-Bird.prototype.distanceToGate = function(distanceToBottom, pipes) {
-    for (pipe of pipes) {
-        const distanceToPipe = pipe.x - this.x - this.diam / 2;
-        if (distanceToPipe > -5) {
-            distanceToGate = Math.sqrt(
-                distance ** 2 +
-                    (pipe.lowerHeight + pipe.gate / 2 - distanceToBottom) ** 2
-            );
-            return distanceToGate;
-        }
-    }
-
-    return width - this.x - this.diam / 2;
-};
-
-Bird.prototype.distanceToGateAndPipe = function(distanceToBottom, pipes) {
-    for (pipe of pipes) {
-        const distanceToPipe = pipe.x - this.x - this.diam / 2;
+Bird.prototype.distanceToGapAndPipe = function(distanceToBottom, pipes) {
+    for (let pipe of pipes) {
+        let distanceToPipe = pipe.x - this.x - this.diam / 2;
         //Be sure that the bird passed the last pipes
         if (distanceToPipe > -(pipe.width + this.diam)) {
-            const distanceToGate =
+            let distanceToGap =
                 pipe.lowerHeight + pipe.gate / 2 - distanceToBottom;
-            return [distanceToPipe, distanceToGate];
+            return [distanceToPipe, distanceToGap];
         }
     }
 
@@ -153,18 +135,18 @@ Bird.prototype.distanceToGateAndPipe = function(distanceToBottom, pipes) {
 };
 
 Bird.prototype.crossOver = function(bird) {
-    const otherWeights = bird.weights;
-    const crossWeights1 = [];
-    const crossWeights2 = [];
-    for (index = 0; index < this.weights.length; index++) {
-        const weights1 = this.weights[index];
-        const weights2 = otherWeights[index];
-        const slicePoint = Math.round(random(1, weights1.shape[0] - 1));
+    let otherWeights = bird.weights;
+    let crossWeights1 = [];
+    let crossWeights2 = [];
+    for (let index = 0; index < this.weights.length; index++) {
+        let weights1 = this.weights[index];
+        let weights2 = otherWeights[index];
+        let slicePoint = Math.round(random(1, weights1.shape[0] - 1));
 
-        const crossLayer1 = weights1
+        let crossLayer1 = weights1
             .slice(0, slicePoint)
             .concat(weights2.slice(slicePoint));
-        const crossLayer2 = weights2
+        let crossLayer2 = weights2
             .slice(0, slicePoint)
             .concat(weights1.slice(slicePoint));
 
@@ -172,8 +154,8 @@ Bird.prototype.crossOver = function(bird) {
         crossWeights2.push(crossLayer2);
     }
 
-    const crossBird1 = new Bird();
-    const crossBird2 = new Bird();
+    let crossBird1 = new Bird();
+    let crossBird2 = new Bird();
 
     crossBird1.weights = crossWeights1;
     crossBird2.weights = crossWeights2;
@@ -182,19 +164,19 @@ Bird.prototype.crossOver = function(bird) {
 };
 
 Bird.prototype.mutate = function(probability = 0.2) {
-    const mutatedBird = new Bird();
-    const mutatedWeights = [];
+    let mutatedBird = new Bird();
+    let mutatedWeights = [];
 
-    for (weights of this.weights) {
-        const shape = weights.shape;
-        const buffer = tf.buffer(
+    for (let weights of this.weights) {
+        let shape = weights.shape;
+        let buffer = tf.buffer(
             shape,
             weights.dtype,
             weights.dataSync().slice()
         );
         for (let i = 0; i < shape[0]; i++) {
             for (let j = 0; j < shape[1]; j++) {
-                const change = Math.random();
+                let change = Math.random();
                 if (change <= probability) {
                     buffer.set(random(MIN, MAX), i, j);
                 }

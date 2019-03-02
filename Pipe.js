@@ -5,7 +5,7 @@ function Pipe() {
     this.upperHeight = random(50, height / 2);
     //Height of the lower pipe
     this.lowerHeight = height - this.gate - this.upperHeight;
-    this.width = 30;
+    this.width = 50;
     this.speed = 2;
     this.color = color('#486824');
 }
@@ -21,7 +21,7 @@ Pipe.prototype.update = function() {
 };
 
 Pipe.prototype.offScreen = function() {
-    if (this.x < -(this.width + 5)) {
+    if (this.x < -this.width) {
         return true;
     } else return false;
 };
